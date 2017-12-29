@@ -1,24 +1,27 @@
-'''
+"""
 Created 12-27-17 by Matthew C. McCallum
-'''
+"""
 
 from SigTools import *
 
+import time
 import unittest
 import numpy as np
 import matplotlib
-matplotlib.use('TKAgg')
+matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
+plt.ioff()
 
 
 class TestARKalman( unittest.TestCase ):
-    '''
-
-    '''
+    """
+    Test cases for the autoregressive Kalman filter.
+    """
 
     def setUp( self ):
-        '''
-        '''
+        """
+        Simple set up function, to create some signals that are useful for test cases.
+        """
         # Make a signal for predicting
         sig_len_s = 3.0
         samp_rate = 44100.0
@@ -36,28 +39,40 @@ class TestARKalman( unittest.TestCase ):
         self._overlap = 0.5
         self._spec_analysis = Spectrogram( self._window, int( fft_size ), self._overlap )
 
-        self._verbose = False
+        self._verbose = True
         self._graph = False
 
     def set_reset_complex_plot( self ):
-        '''
-        '''
+        """
+        Function for initializing a plot of a few complex phasors.
+        """
+        plt.close('all')
         plt.figure()
         ax = plt.gca()
         ax.axhline()
         ax.axvline()
+        plt.xlabel('Real')
+        plt.ylabel('Imaginary')
         plt.hold( True )
 
     def plot_complex( self, num, style='r:x' ):
-        '''
-        '''
+        """
+        Plot a single complex number as a phasor.
+
+        Args:
+             num -> complex - A complex number to be plotted on the complex plane.
+
+             style -> str - A string describing the plotting style according to matplotlib conventions.
+        """
         x = np.array( [0, np.real(num)] )
-        y = np.array( [0, np.image(num)] )
+        y = np.array( [0, np.imag(num)] )
         plt.plot( x, y, style )
 
     def test_sin_plus_noise( self ):
-        '''
-        '''
+        """
+        Test case for tracking a sinusoid in noise.
+        """
+        # Set up test parameters
         signal = self._sinusoid + self._white_noise
         self._spec_analysis.Analyze( signal )
         prediction_sig = self._spec_analysis.spec[self._freq_fft_bin,:]
@@ -65,60 +80,73 @@ class TestARKalman( unittest.TestCase ):
         ground_truth_sig = self._spec_analysis.spec[self._freq_fft_bin,:]
         phase_advancement = self._spec_analysis.frame_inc*self._freq_rad
 
+        # Set up Kalman filter
         uncertainty = np.sum( np.power( self._window, 2.0 ) )*self._noise_var
         kalman_filter = ARKalman( increment=self._spec_analysis.frame_inc,
                                   start_freq=self._freq_rad,
                                   observation_dim=1,
-                                  transition_uncertainty=1.0,
+                                  transition_uncertainty=10.0,
                                   measurement_uncertainty=uncertainty,
                                   num_ar_coeffs=3,
                                   ac_size=6 )
 
+        # Push in signal frame by frame and plot results if desired.
         all_results = np.zeros( len( prediction_sig ), dtype='complex' )
         for index in range( len( prediction_sig ) ):
             all_results[index] = kalman_filter.Push( prediction_sig[index], self._freq_rad ).item( ( 0, 0 ) )
-            if index>200:
-                plt.plot( np.abs( all_results[:200] ) )
-                plt.hold( True )
-                plt.plot( np.abs( prediction_sig[:200] ), 'r-' )
-                plt.show()
 
-            if self._graph:
+            if self._graph and self._verbose:
                 self.set_reset_complex_plot()
                 # Plot oracle mean
-                self.plot_complex( ground_truth_sig[index], 'b--o' )
+                self.plot_complex( ground_truth_sig[index], 'b-o' )
                 # Plot prediction based on oracle
                 if index > 0:
-                    self.plot_complex( ground_truth_sig[index-1], 'k--o' )
+                    self.plot_complex( ground_truth_sig[index-1]*np.exp(1j*phase_advancement), 'k--o' )
                 # Plot noise signal
                 self.plot_complex( prediction_sig[index], 'r:x' )
                 # Plot Kalman mean
-                self.plot_complex( result, 'g-x' )
+                self.plot_complex( all_results[index], 'g-x' )
+                plt.axis('equal')
+                plt.show()
 
+        # Plot the tracking over time.
         if self._graph:
-            pass
-            # Plot spectrogram
-            # Plot harmonic component
-            # Plot noise component
+            # Plot magnitude adaptation
+            plt.plot( np.abs( all_results ) )
+            plt.hold( True )
+            plt.plot( np.abs( prediction_sig ), 'r-' )
+            plt.show()
+
+        # Check test conditions
+        adaptation_frames = 100 # => The number of frames where the Kalman filter is still expected to be adapting to
+                                # steady state.
+        sq_mean = np.mean( np.abs( all_results[adaptation_frames:] ) )**2.0
+        variance = np.var( np.abs( all_results[adaptation_frames:] ) )
+        SNR = 10*np.log10( sq_mean/variance )
+        self.assertGreater( SNR, 35.0, 'Kalman filter output too noisy.' )
+        if self._verbose:
+            print( ' ' )
+            print( 'Test sin plus noise complete, with SNR: {0}'.format( SNR ) )
+            print( ' ' )
 
     def test_sine_plus_impulse( self ):
-        '''
-        '''
+        """
+        """
         pass
 
     def test_chirp( self ):
-        '''
-        '''
+        """
+        """
         pass
 
     def test_sine_onset( self ):
-        '''
-        '''
+        """
+        """
         pass
 
     def test_sine_crossover( self ):
-        '''
-        '''
+        """
+        """
         pass
 
 
