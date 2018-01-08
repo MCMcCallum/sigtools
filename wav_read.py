@@ -3,7 +3,7 @@ Created 12-26-17 by Matthew C. McCallum
 """
 
 # Local modules
-from SigTools import WavFmt
+from .wav_fmt import *
 
 # Local submodules
 # None.
@@ -32,13 +32,6 @@ class WavRead( object ):
         with wave.open(self._filename, 'r') as audio:
             self._num_frames = audio.getnframes()
             self._fmt = WavFmt.FromWav( audio )
-        self._unpack_fmt = '<%i' % ( self._num_frames*self._num_channels )
-        if self._bit_depth == 16:
-            self._unpack_fmt += 'h'
-        elif self._bit_depth == 32:
-            self._unpack_fmt += 'i'
-        else:
-            raise Exception( 'Unsupporeted bit depth for wave file.' )
 
     def GetSamples( self ):
         """
@@ -49,7 +42,7 @@ class WavRead( object ):
         """
         with wave.open( self._filename, 'r' ) as audio:
             data = audio.readframes( self._num_frames )
-        data = struct.unpack( self._unpack_fmt, data )
+        data = struct.unpack( self._fmt.PackingString( self._num_frames ), data )
 
         return_array = np.zeros( ( self._fmt.n_channels, self._num_frames ) )
         for channel in range( self._fmt.n_channels ):

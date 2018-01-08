@@ -48,7 +48,7 @@ class WavPlay( object ):
 
         interleaved_array = np.zeros( audio.shape[1] * self._fmt.n_channels )
         for chan in range( self._fmt.n_channels ):
-            interleaved_array[chan::2] = audio[chan,:]
+            interleaved_array[chan::self._fmt.n_channels] = audio[chan,:]
         interleaved_array = interleaved_array*32767
         interleaved_array = interleaved_array.astype( int )
         interleaved_array = interleaved_array.tolist()
