@@ -5,7 +5,7 @@ Created 12-26-17 by Matthew C. McCallum
 # Local imports
 # None.
 
-# Imports from local modules
+# Imports from local submodules
 # None.
 
 # Thirdparty imports
@@ -14,7 +14,7 @@ import numpy.linalg as la
 import spectrum as sp
 
 # Python library imports
-# None.
+from collections import deque
 
 class ARKalman( object ):
     """
@@ -29,7 +29,7 @@ class ARKalman( object ):
             increment -> int - The number of samples elapsed between each observation pushed into the Kalman filter
 
             start_freq -> float - The frequency to initialise the AR prediction tracking to. This adjusts the phase of
-            current and past estimations to predict the current frame.
+            current and past estimations to predict the current frame. In rad per sample.
 
             observation -> int - The dimensionality of each observation pushed into the Kalman filter.
 
@@ -50,11 +50,13 @@ class ARKalman( object ):
         """
 
         # Initialise history for updating autoregressive matrix
-        self._history = np.matlib.zeros( ( ac_size, 1 ), dtype='complex' )
+        self._history = deque( [0.0]*ac_size, maxlen=ac_size ) #np.matlib.zeros( ( ac_size, 1 ), dtype='complex' )
         self._num_frames = 0
 
         # Initialise AR transition matrix.
         self._increment = increment
+        self._last_freq = start_freq
+        self._freq_grad = 0.0
         expected_phase = np.exp(1j*self._increment*start_freq)
         self._ar_transition = np.matlib.zeros( ( num_ar_coeffs, num_ar_coeffs ), dtype='complex' )
         self._ar_reestimation = ar_reestimation
@@ -76,7 +78,7 @@ class ARKalman( object ):
     @property
     def obs_uncertainty( self ):
         """
-        The uncertainty of observations pushed into the Kalman filter.
+        float - The uncertainty of observations pushed into the Kalman filter.
         This could be updated dynamically based on estimation of noise in each of the magnitude/phase observations.
 
         TODO [matthew.mccallum 12.30.17]: This is currently limited to 1D observations, while parts of this class
@@ -87,11 +89,47 @@ class ARKalman( object ):
     @obs_uncertainty.setter
     def obs_uncertainty( self, value ):
         """
-        Set the observation uncertainty.
+        float - Set the observation uncertainty.
 
         TODO [matthew.mccallum 12.30.17]: This is currently limited to 1D observations, expand to the general case.
         """
         self._measurement_noise[-1,-1] = value
+
+    @property
+    def last_freq( self ):
+        """
+        float - The frequency of the last sample that was pushed into this filter, in rad per sample.
+        """
+        return self._last_freq
+
+    @property
+    def last_estimate( self ):
+        """
+        complex - The last estimated hidden state.
+        """
+        return np.dot(self._observation, self._state).item( ( 0, 0 ) )
+
+    @property
+    def hist_length( self ):
+        """
+        int - The length of history stored in the object for re-estimating autoregressive coefficients.
+        """
+        return self._num_frames
+
+    @property
+    def freq_gradient( self ):
+        """
+        float - The change in frequency between the last pushed sample and the sample before that. In rad per sample.
+        """
+        return self._freq_grad
+
+    @property
+    def prediction( self ):
+        """
+        complex - The best estimate of the next state given the current hidden state and the transition matrix.
+        """
+        # Assuming one-dimensional observation space
+        return np.dot(self._ar_transition, self._state).item( ( 0, 0 ) )
 
     def Push( self, complex_component, frequency ):
         """
@@ -110,9 +148,13 @@ class ARKalman( object ):
         # TODO [matthew.mccallum 12.27.17]: We should only really update the Kalman coefficients if we have a high local SNR...
         #									otherwise we should really lock them up as the new AR process will be distorted by
         #									any noise correlation.
+        self._freq_grad = frequency - self._last_freq
+        self._last_freq = frequency
         expected_phase = np.exp( 1j*self._increment*frequency )
-        self._history = np.roll(self._history, -1, axis=0)*expected_phase
-        self._history[-1] = complex_component
+        for ind in range( len( self._history ) ):
+            self._history[ind] = self._history[ind]*expected_phase
+        self._history.append( complex_component )
+        self._num_frames += 1
         self._update_transition( expected_phase )
 
         # Predict state and variance
@@ -129,7 +171,7 @@ class ARKalman( object ):
         self._state = self._state + np.dot( kalman_gain, observation - np.dot( self._observation, self._state ) )
         self._predictive_var = np.dot( np.eye( self._predictive_var.shape[0] ) - np.dot( kalman_gain, self._observation ), self._predictive_var )
 
-        return np.dot(self._observation, self._state)
+        return np.dot( self._observation, self._state )
 
     def _update_transition( self, expected_phase ):
         """
@@ -141,7 +183,7 @@ class ARKalman( object ):
         """
 
         # If enough history, then update the AR coefficeints if requested.
-        if self._ar_reestimation and ( self._num_frames > len( self._history ) ):
+        if self._ar_reestimation and ( self._num_frames >= len( self._history ) ):
             coeffs, _, _ = sp.aryule( self._history, self._ar_transition.shape[0] )
             self._ar_transition[-1,:] = np.fliplr( -coeffs.reshape( 1, self._ar_transition.shape[0] ) )*expected_phase
         # Otherwise just update according to the most recent frequency
@@ -149,4 +191,3 @@ class ARKalman( object ):
             self._ar_transition[-1, :] = expected_phase / self._ar_transition.shape[1]
             if self._ar_transition.shape[1] > 1:
                 self._ar_transition[:-1, 1:] = expected_phase * np.eye( self._ar_transition.shape[1] - 1 )
-            self._num_frames += 1
