@@ -33,16 +33,27 @@ class WavRead( object ):
             self._num_frames = audio.getnframes()
             self._fmt = WavFmt.FromWav( audio )
 
-    def GetSamples( self ):
+    def GetSamplesInterleavedInt( self ):
+        """
+        Get all samples from the wav file as integers in an interleaved list.
+
+        Return:
+            list(int) - A list of interleaved samples from the audio file.
+        """
+        with wave.open( self._filename, 'r' ) as audio:
+            data = audio.readframes( self._num_frames )
+        data = struct.unpack( self._fmt.PackingString( self._num_frames ), data )
+
+        return list(data)
+
+    def GetSamplesFloat( self ):
         """
         Get all samples from the wav file as floats in the range -1.0 <= sample <= 1.0
 
         Return:
             np.ndarray - An array of dimensions (num_channels, num_frames) containing float valued audio samples.
         """
-        with wave.open( self._filename, 'r' ) as audio:
-            data = audio.readframes( self._num_frames )
-        data = struct.unpack( self._fmt.PackingString( self._num_frames ), data )
+        data = self.GetSamplesInterleavedInt()
 
         return_array = np.zeros( ( self._fmt.n_channels, self._num_frames ) )
         for channel in range( self._fmt.n_channels ):
