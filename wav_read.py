@@ -29,7 +29,7 @@ class WavRead( object ):
         Constructor.
 
         Args:
-            filename -> str or seekable file - A string or seekable file like object describing either the filename and
+            filehandle -> str or seekable file - A string or seekable file like object describing either the filename and
             path of the audio wav file to be read, or a stream to the file data itself.
         """
         self._file = filehandle
@@ -55,6 +55,8 @@ class WavRead( object ):
         self._data_fmt = self.SAMPLE_FMT_INT_INTERLEAVED
         self._data = list(data)
 
+        return self._data
+
     def ReadSamplesFloat( self ):
         """
         Reads all samples from the wav file as floats in the range -1.0 <= sample <= 1.0.
@@ -67,10 +69,12 @@ class WavRead( object ):
 
         return_array = np.zeros( ( self._fmt.n_channels, self._num_frames ) )
         for channel in range( self._fmt.n_channels ):
-            return_array[channel,:] = np.array( data[channel::self._fmt.n_channels] )/( 2.0**self._fmt.bit_depth )
+            return_array[channel,:] = np.array( self._data[channel::self._fmt.n_channels] )/( 2.0**self._fmt.bit_depth )
 
         self._data_fmt = self.SAMPLE_FMT_FLOAT_ARRAY
         self._data = return_array
+
+        return self._data
 
     @property
     def fmt( self ):

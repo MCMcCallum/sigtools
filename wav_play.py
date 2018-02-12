@@ -6,7 +6,7 @@ Created 01-07-17 by Matthew C. McCallum
 # None.
 
 # Local submodules
-from SigTools import WavFmt
+from sigtools import WavFmt
 
 # Thirdparty modules
 import numpy as np
