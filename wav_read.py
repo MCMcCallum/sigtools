@@ -36,9 +36,12 @@ class WavRead( object ):
         self._data = None
         self._data_fmt = self.SAMPLE_FMT_NONE
 
-        with wave.open(self._file, 'r') as audio:
+        with wave.open(self._file, 'rb') as audio:
             self._num_frames = audio.getnframes()
             self._fmt = WavFmt.FromWav( audio )
+
+        if type(self._file) is not str:
+            self._file.seek(0)
 
     def ReadSamplesInterleavedInt( self ):
         """
@@ -48,8 +51,10 @@ class WavRead( object ):
         Return:
             list(int) - A list of interleaved samples from the audio file.
         """
-        with wave.open( self._file, 'r' ) as audio:
+        with wave.open( self._file, 'rb' ) as audio:
             data = audio.readframes( self._num_frames )
+        if type(self._file) is not str:
+            self._file.seek(0)
         data = struct.unpack( self._fmt.PackingString( self._num_frames ), data )
 
         self._data_fmt = self.SAMPLE_FMT_INT_INTERLEAVED
