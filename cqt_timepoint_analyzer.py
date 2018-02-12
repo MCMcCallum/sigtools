@@ -75,7 +75,7 @@ class CQTTimepointAnalyzer( object ):
     @samp_rate.setter
     def samp_rate(self, value):
         self._samp_rate = value
-        self._initKernel
+        self._initKernel()
 
     def Analyze(self, signal, time_points):
         """
