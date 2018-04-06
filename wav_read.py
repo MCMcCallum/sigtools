@@ -110,3 +110,14 @@ class WavRead( object ):
             str - A string constant describing the format in which the class's data is in.
         """
         return self._data_fmt
+
+    @property
+    def audio_length( self ):
+        """
+        The length of the audio in the file in seconds.
+
+        Return:
+            float - The duration of the audio file in seconds.
+        """
+        return self._num_frames/self._fmt.samp_rate
+    
