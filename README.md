@@ -8,9 +8,9 @@ A number of reusable Python audio signal processing functions I use in my code.
 
 The current responsibilities of this module include:
 
-    - Accessors for media files
-    - Media file conversion functions
-    - Signal processing analysis algorithms, math, filters
+ - Accessors for media files
+ - Media file conversion functions
+ - Signal processing analysis algorithms, math, filters
 
 Dependencies
 ===
