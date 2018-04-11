@@ -2,9 +2,15 @@
 sigtools
 ===
 
+Written by Matt C. McCallum.
+
 A number of reusable Python audio signal processing functions I use in my code.
 
-Written by Matt C. McCallum.
+The current responsibilities of this module include:
+
+    - Accessors for media files
+    - Media file conversion functions
+    - Signal processing analysis algorithms, math, filters
 
 Dependencies
 ===
