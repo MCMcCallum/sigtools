@@ -98,6 +98,5 @@ class SubBinSpecAnalyzer_TestCase( unittest.TestCase ):
             print( 'PHASE: {0} vs {1}'.format(estimated_phase, expected_phase) )
 
 
-
 if __name__=='__main__':
     unittest.main()

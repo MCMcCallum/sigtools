@@ -15,7 +15,14 @@ The current responsibilities of this module include:
 Dependencies
 ===
 
-Everything is in the usual requirements.txt file. The only complication might be with [PyAudio](https://people.csail.mit.edu/hubert/pyaudio/).
+Everything is in the usual requirements.txt file.
+
+There may be a complication with [PyAudio](https://people.csail.mit.edu/hubert/pyaudio/) if portaudio is not installed.
+
+Note that this module also depends on [this](https://github.com/MCMcCallum/data_access) url library, not available from regular PyPi servers.
+
+You'll need [ffmpeg](https://www.ffmpeg.org/) if you want to read mp3 files.
+
 
 Install
 ===
