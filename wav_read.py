@@ -4,6 +4,7 @@ Created 12-26-17 by Matthew C. McCallum
 
 # Local modules
 from .wav_fmt import *
+from .audio_read import *
 
 # Local submodules
 # None.
@@ -16,7 +17,7 @@ import wave
 import struct
 
 
-class WavRead( object ):
+class WavRead(AudioRead):
     """
     A wave reader object for getting samples from file
     """
@@ -100,6 +101,16 @@ class WavRead( object ):
             ? - Audio sample data in the format that was most recently read from file.
         """
         return self._data
+
+    @property
+    def audio_length(self):
+        """
+        The length of the audio in the file in seconds.
+
+        Return:
+            float - The duration of the audio file in seconds.
+        """
+        return self._num_frames/self._fmt.samp_rate
 
     @property
     def data_fmt( self ):
