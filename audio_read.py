@@ -21,6 +21,16 @@ class AudioRead(ABC):
         """
         pass
 
+    @abstractmethod
+    def ReadSamplesInterleavedInt(self):
+        """
+        Reads all samples from file as integers in an interleaved list.
+
+        Return:
+            list(int) - A list of interleaved samples from the audio file.
+        """
+        pass
+
     @property
     @abstractmethod
     def data(self):

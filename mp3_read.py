@@ -38,6 +38,7 @@ class Mp3Read(AudioRead):
         self._temp_filename = None
         self._data = None
         n_channels = mutagen.mp3.MP3(self._file).info.channels
+        self._file.seek(0)
         self._fmt = WavFmt(samp_rate=self.WAV_SAMP_RATE, n_channels=n_channels, bit_depth=self.WAV_BIT_DEPTH)
 
     def __del__(self):
@@ -62,8 +63,9 @@ class Mp3Read(AudioRead):
         # Write wav data
         if type(self._file) is not str:
             # Copy to a local location first in case it is remote...
-            temp_mp3_file = tempfile.NamedTemporaryFile(mode='r+b', suffix='.wav')
+            temp_mp3_file = tempfile.NamedTemporaryFile(mode='r+b', suffix='.mp3')
             temp_mp3_file.write(self._file.read())
+            self._file.seek(0)
             fname = temp_mp3_file.name
         else:
             fname = self._file
@@ -103,6 +105,22 @@ class Mp3Read(AudioRead):
         self._data = wav_file.ReadSamplesFloat()
         return self._data
 
+    def ReadSamplesInterleavedInt(self):
+        """
+        Reads all samples as integers in an interleaved list.
+        This replaces any previous data read from file.
+
+        Return:
+            list(int) - A list of interleaved samples from the audio file.
+        """
+        if not self._temp_file:
+            self.ConvertFile()
+
+        # At this stage the wav file is just opened each time it is needed, this should be pretty light weight.
+        wav_file = WavRead(self._temp_filename)
+        self._data = wav_file.ReadSamplesInterleavedInt()
+        return self._data
+
     @property
     def data(self):
         """
@@ -127,7 +145,9 @@ class Mp3Read(AudioRead):
         else:
             # Get the audio length from the mp3 file (more efficient)
             # TODO [matthew.mccallum 04.11.18]: Test the below length getting with a BufferedIOBase derived object.
-            return mutagen.mp3.MP3(self._file).info.length
+            length = mutagen.mp3.MP3(self._file).info.length
+            self._file.seek(0)
+            return length
 
     @property
     def fmt( self ):
