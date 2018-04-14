@@ -1,3 +1,7 @@
+"""
+Created once upon a time by Matthew C. McCallum
+"""
+
 
 # Local imports
 from sigtools import WavRead
@@ -12,6 +16,7 @@ plt.ioff()
 
 # Python standard library imports
 import unittest
+
 
 class TestCQTTimepointAnalyzer(unittest.TestCase):
 
@@ -31,6 +36,7 @@ class TestCQTTimepointAnalyzer(unittest.TestCase):
         result = analyzer.Analyze(signal, times)
         plt.imshow(np.log(result))
         plt.show()
+
 
 if __name__ == '__main__':
     unittest.main()

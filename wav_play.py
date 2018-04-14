@@ -15,6 +15,7 @@ import pyaudio as pa
 # Python library imports
 import struct
 
+
 class WavPlay( object ):
     """
     A class for playing back audio from data.

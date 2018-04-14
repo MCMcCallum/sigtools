@@ -4,3 +4,5 @@ from .spectrogram import *
 from .wav_read import *
 from .wav_fmt import *
 from .wav_play import *
+from .mp3_read import *
+from .make_audio_reader import *
