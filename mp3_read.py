@@ -38,7 +38,8 @@ class Mp3Read(AudioRead):
         self._temp_filename = None
         self._data = None
         n_channels = mutagen.mp3.MP3(self._file).info.channels
-        self._file.seek(0)
+        if type(self._file) is not str:
+            self._file.seek(0)
         self._fmt = WavFmt(samp_rate=self.WAV_SAMP_RATE, n_channels=n_channels, bit_depth=self.WAV_BIT_DEPTH)
 
     def __del__(self):
@@ -70,8 +71,8 @@ class Mp3Read(AudioRead):
         else:
             fname = self._file
         subprocess.run(
-            ["ffmpeg", "-loglevel", "panic", "-i", fname, "-vn", "-acodec", self.WAV_FFMPEG_FMT, "-ac", "1", "-ar",
-             str(self.WAV_SAMP_RATE), "-f", "wav", 'pipe:1'], stdout=self._temp_file)
+            ["ffmpeg", "-loglevel", "panic", "-i", fname, "-vn", "-acodec", self.WAV_FFMPEG_FMT, "-ac",
+             str(self._fmt.n_channels), "-ar", str(self.WAV_SAMP_RATE), "-f", "wav", 'pipe:1'], stdout=self._temp_file)
 
         # Fix file size as ffmpeg output via std stream doesn't include a file size.
         self._temp_file.seek(0)
