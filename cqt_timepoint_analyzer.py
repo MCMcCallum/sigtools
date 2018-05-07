@@ -1,4 +1,5 @@
 
+
 # Third party imports
 import librosa.filters
 import scipy.fftpack as fft
@@ -53,14 +54,13 @@ class CQTTimepointAnalyzer( object ):
                                                           bins_per_octave=self._samples_per_octave)
         # Filters are padded up to the nearest integral power of 2
         self._n_fft = basis.shape[1]
-        self._window_size = self._n_fft//2
+        self._window_size = self._n_fft
         # re-normalize bases with respect to the FFT window length
         basis *= basis_lengths[:, np.newaxis] / float(self._n_fft)
         # FFT and retain only the non-negative frequencies
         self._basis = fft.fft(basis, n=self._n_fft, axis=1)[:, :(self._n_fft // 2) + 1]
         # sparsify the basis
-        self._basis = np.abs(librosa.util.sparsify_rows(self._basis,
-                                                        quantile=self._sparsity))
+        self._basis = librosa.util.sparsify_rows(self._basis, quantile=self._sparsity)
         # Get filter lengths for normalization
         self._filt_lengths = librosa.filters.constant_q_lengths(self._samp_rate,
                                                                 self._fmin,
@@ -100,8 +100,8 @@ class CQTTimepointAnalyzer( object ):
         windows = np.hstack(windows)
 
         # Analyze signal
-        spec = np.abs(fft.fft(windows, n=self._n_fft, axis=0)[:(self._n_fft // 2) + 1, :])
-        cqt = self._basis.dot(spec)
+        spec = fft.fft(windows, n=self._n_fft, axis=0)[:(self._n_fft // 2) + 1, :]
+        cqt = np.abs(self._basis.dot(spec))
         cqt *= np.sqrt(self._filt_lengths[:, np.newaxis] / self._n_fft)
 
         return cqt
