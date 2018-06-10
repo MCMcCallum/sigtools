@@ -13,6 +13,8 @@ import mutagen.mp3
 # Python standard library imports
 import tempfile
 import subprocess
+import shutil
+import os
 
 
 class Mp3Read(AudioRead):
@@ -89,6 +91,31 @@ class Mp3Read(AudioRead):
         # Update channels in case the mp3 metadata was wrong before
         wav_file = WavRead(self._temp_filename)
         self._fmt.n_channels = wav_file.fmt.n_channels
+
+    def SaveWav(self, directory, filename=None):
+        """
+        Copies the MP3 data into a local wav file as specified by directory and filename.
+
+        Args:
+            directory -> str - A string describing the location to save the file to.
+
+            filename -> str - The base filename to save the wav file to, if not provided the wav file will have
+            the same name as the original mp3 file, but with a wav extension.
+        """
+        # TODO [matthew.mccallum 06.09.18]: This currently assumes the file the class is configured with and the
+        # provided arguments are strings. I should generalize this to file streams so that it can be saved on NFS,
+        # or S3 for example.
+        if not self._temp_file:
+            self.ConvertFile()
+
+        if type(self._file) is not str:
+            filename = self._file.name
+        else:
+            filename = self._file
+
+        save_filename = os.path.join(directory, os.path.splitext(os.path.basename(filename))[0]+".wav")
+
+        shutil.copy(self._temp_filename, save_filename)
 
     def ReadSamplesFloat(self):
         """
