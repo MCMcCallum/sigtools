@@ -73,7 +73,7 @@ class Mp3Read(AudioRead):
         else:
             fname = self._file
         subprocess.run(
-            ["ffmpeg", "-loglevel", "panic", "-i", fname, "-vn", "-acodec", self.WAV_FFMPEG_FMT, "-ac",
+            ["ffmpeg", "-loglevel", "panic", "-i", fname, "-map_metadata", "-1", "-vn", "-acodec", self.WAV_FFMPEG_FMT, "-ac",
              str(self._fmt.n_channels), "-ar", str(self.WAV_SAMP_RATE), "-f", "wav", 'pipe:1'], stdout=self._temp_file)
 
         # Fix file size as ffmpeg output via std stream doesn't include a file size.
@@ -89,7 +89,7 @@ class Mp3Read(AudioRead):
         self._temp_file.seek(0)
 
         # Update channels in case the mp3 metadata was wrong before
-        wav_file = WavRead(self._temp_filename)
+        wav_file = WavRead(self._temp_file)
         self._fmt.n_channels = wav_file.fmt.n_channels
 
     def SaveWav(self, directory, filename=None):
@@ -129,7 +129,7 @@ class Mp3Read(AudioRead):
             self.ConvertFile()
 
         # At this stage the wav file is just opened each time it is needed, this should be pretty light weight.
-        wav_file = WavRead(self._temp_filename)
+        wav_file = WavRead(self._temp_file)
         self._data = wav_file.ReadSamplesFloat()
         return self._data
 
@@ -145,7 +145,7 @@ class Mp3Read(AudioRead):
             self.ConvertFile()
 
         # At this stage the wav file is just opened each time it is needed, this should be pretty light weight.
-        wav_file = WavRead(self._temp_filename)
+        wav_file = WavRead(self._temp_file)
         self._data = wav_file.ReadSamplesInterleavedInt()
         return self._data
 

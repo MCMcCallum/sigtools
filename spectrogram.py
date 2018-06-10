@@ -7,15 +7,10 @@ Created 12-26-17 by Matthew C. McCallum
 
 # Thirdparty modules
 import numpy as np
-import matplotlib
-matplotlib.use('Qt5Agg')
-import matplotlib.pyplot as plt
-plt.ioff()
 
 # Python library modules
 import math
 import copy
-from functools import singledispatch
 
 
 class Spectrogram( object ):
@@ -153,11 +148,4 @@ class Spectrogram( object ):
             int - The number of frames in this spectrogram.
         """
         return self._spec.shape[1]
-
-    def Plot( self ):
-        """
-        Plots the current spectrogram and displays it on screen.
-        """
-        plt.imshow( 10*np.log10( np.abs( self._spec ) ) )
-        plt.show()
 
