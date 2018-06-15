@@ -23,8 +23,6 @@ class CQTAnalyzer(object):
         Constructor.
 
         Args:
-            samp_rate: float - Sampling rate in Hz of the audio data that will be provided to the analyzer.
-
             samples_per_octave: int - The number of CQT samples between each octave.
 
             octaves: int - The number of octaves in the output data, starting at min_freq.
@@ -35,14 +33,13 @@ class CQTAnalyzer(object):
             
             num_windows: int - The number of CQT windows to analyze following the requested analysis point.
         """
-        self._samp_rate = samp_rate
         self._hop = hop
         self._min_freq = min_freq
         self._octaves = octaves
         self._samples_per_octave = samples_per_octave
         self._num_windows = num_windows
 
-    def Analyze(self, audio_sig, start_idx):
+    def Analyze(self, audio_sig, start_idx, samp_rate):
         """
         This function will perform a CQT analysis of signal starting at the index requested. The analysis will not
         go to the end of the signal, but output a fixed number of analysis windows following the requested index.
@@ -50,12 +47,15 @@ class CQTAnalyzer(object):
         Args:
             audio_sig: np.ndarray(float) - A 1D numpy array of floats, each representing an individual sample.
 
-            start_idx: int - The index in audio_sig at which the first analysis window is centered. Any time before
-            this index will be padded by reflecting the signal that was after it, according to Librosa.
+            start_idx: int - The index of the first window to return. A block of _num_windows will be returned
+            following this first window. The window at index 0 is centered at sample 0 in audio_sig. All remaining
+            windows are centered at audiosig[idx*self._hop].
+
+            samp_rate: float - Sampling rate in Hz of the audio data that will be provided to the analyzer.
         """
-        audio_sig = audio_sig[start_idx:(start_idx + hop*self._num_windows + self._samp_rate)]
+        audio_sig = audio_sig[start_idx*self._hop:(start_idx*self._hop + self._hop*self._num_windows + self._samp_rate)] # <= Add on a second here to catch the last window, and chop off any excess later. This is a little sloppy, but there is only so much thyme.
         return librosa.core.cqt(audio_sig, 
-                                self._samp_rate, 
+                                samp_rate, 
                                 self._hop, 
                                 self._min_freq, 
                                 self._octaves*self._samples_per_octaves, 
