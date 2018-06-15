@@ -18,7 +18,7 @@ class CQTAnalyzer(object):
     settings in the object across calls to Analyze(...).
     """
 
-    def __init__(self, samp_rate, samples_per_octave, octaves, min_freq, hop, num_windows):
+    def __init__(self, samples_per_octave, octaves, min_freq, hop, num_windows):
         """
         Constructor.
 
