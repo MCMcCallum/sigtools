@@ -29,7 +29,7 @@ class CQTAnalyzer(object):
 
             min_freq: float - Minimum frequency analyzed in the CQT in Hz.
 
-            hop: int - The number of samples to skip between successive CQT analysis windows.
+            hop: float - The number of seconds to skip between successive CQT analysis windows.
             
             num_windows: int - The number of CQT windows to analyze following the requested analysis point.
         """
@@ -53,13 +53,23 @@ class CQTAnalyzer(object):
 
             samp_rate: float - Sampling rate in Hz of the audio data that will be provided to the analyzer.
         """
-        audio_sig = audio_sig[start_idx*self._hop:(start_idx*self._hop + self._hop*self._num_windows + self._samp_rate)] # <= Add on a second here to catch the last window, and chop off any excess later. This is a little sloppy, but there is only so much thyme.
+        hop_samples = self._hop*samp_rate
+        # TODO [matthew.mccallum 06.15.18]: Here I add on 1.0 seconds to catch the last window, and chop off any excess later. 
+        # This is a little sloppy, but there is only so much thyme. I should really caclulate the additional audio required.
+        audio_sig = audio_sig[start_idx*hop_samples:(start_idx*hop_samples + hop_samples*self._num_windows + self._samp_rate)] 
         return librosa.core.cqt(audio_sig, 
                                 samp_rate, 
-                                self._hop, 
+                                hop_samples, 
                                 self._min_freq, 
                                 self._octaves*self._samples_per_octaves, 
                                 self._samples_per_octave, 
                                 tuning=0.0,
                                 real=True)[:,:self._num_windows]
+
+    @property
+    def window_rate(self):
+        """
+        Returns the effective windowing rate of the CQT anaylsis in Hz.
+        """
+        return 1.0/self._hop
         
