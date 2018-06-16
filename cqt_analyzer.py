@@ -70,7 +70,22 @@ class CQTAnalyzer(object):
     @property
     def window_rate(self):
         """
+        Type: float
+
         Returns the effective windowing rate of the CQT anaylsis in Hz.
         """
         return 1.0/self._hop
+
+    @property
+    def num_windows(self):
+        """
+        Type: int
+
+        Allow the number of windows to be configurable.
+        This property is the maximum number of CQT windows returned by a call to Analyze.
+        """
+        return self._num_windows
+    @num_windows.setter
+    def num_windows(self, num_wins):
+        self._num_windows = num_wins
         
