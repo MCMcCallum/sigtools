@@ -7,6 +7,7 @@ Created 06-14-18 by Matt C. McCallum
 
 # Third party imports
 import librosa
+import numpy as np
 
 # Python standard library imports
 # None.
@@ -54,17 +55,17 @@ class CQTAnalyzer(object):
             samp_rate: float - Sampling rate in Hz of the audio data that will be provided to the analyzer.
         """
         hop_samples = self._hop*samp_rate
+        hop_samples = int(2**5 * round(hop_samples/(2**5)))
         # TODO [matthew.mccallum 06.15.18]: Here I add on 1.0 seconds to catch the last window, and chop off any excess later. 
         # This is a little sloppy, but there is only so much thyme. I should really caclulate the additional audio required.
-        audio_sig = audio_sig[start_idx*hop_samples:(start_idx*hop_samples + hop_samples*self._num_windows + self._samp_rate)] 
-        return librosa.core.cqt(audio_sig, 
+        audio_sig = audio_sig[int(start_idx*hop_samples):int(start_idx*hop_samples + hop_samples*self._num_windows + samp_rate)] 
+        return np.abs(librosa.core.cqt(audio_sig, 
                                 samp_rate, 
                                 hop_samples, 
                                 self._min_freq, 
-                                self._octaves*self._samples_per_octaves, 
+                                self._octaves*self._samples_per_octave, 
                                 self._samples_per_octave, 
-                                tuning=0.0,
-                                real=True)[:,:self._num_windows]
+                                tuning=0.0)[:,:self._num_windows])
 
     @property
     def window_rate(self):

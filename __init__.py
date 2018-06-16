@@ -1,4 +1,5 @@
 from .cqt_timepoint_analyzer import *
+from .cqt_analyzer import *
 from .sub_bin_spec_analyzer import *
 from .spectrogram import *
 from .wav_read import *
