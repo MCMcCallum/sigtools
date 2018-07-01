@@ -37,3 +37,27 @@ def log_scale(data, dynamic_range):
     data[inds] = min_val
     data[data<min_val] = min_val
     return data
+
+
+def peaks(signal):
+    """
+    Returns the indices of all peaks in a provided 1D signal. Currently if there is a plateau,
+    This function will return the index of the first value of the plateau only.
+
+    Args:
+        signal -> np.ndarray - A 1D numpy array containing the signal to find peak indices for.
+
+    Return:
+        np.ndarray - A 1D numpy array containing the indices of every peak in the signal.
+    """
+    # TODO [matthew.mccallum 06.30.18]: Add options here for plateaus here - the user should be able to
+    # choose to return the first value of a plateau, last value of a plateau, neither, or both.
+    assert(signal.ndim == 1) # <= This function is limited to analyzing 1D signals for now.
+    signal = np.concatenate((np.array([0.0]), signal, np.array([0.0])))
+    diff_sig = signal[1:] - signal[:-1]
+    peaks = diff_sig[1:]*diff_sig[:-1]
+    peaks = peaks <= 0
+    peaks = np.logical_and(peaks, (signal[1:-1] > signal[:-2]))
+    peak_idcs = np.nonzero(peaks)[0]
+    return peak_idcs
+    
