@@ -61,3 +61,19 @@ def peaks(signal):
     peak_idcs = np.nonzero(peaks)[0]
     return peak_idcs
     
+
+def time_string(seconds):
+    """
+    Returns a string that is a track-time format representation of the provided seconds value.
+
+    Args:
+        seconds -> float - A number of seconds to convert into minutes, seconds and milliseconds
+
+    Return:
+        str - A string in track-time format, e.g., <minutes>:<seconds>:<milliseconds>
+    """
+    minutes = int(seconds/60.0)
+    seconds = seconds - minutes*60
+    whole_secs = int(seconds)
+    frac_secs = int((seconds - whole_secs)*100)
+    return str(minutes) + ":" + str('{:02d}').format(whole_secs) + ":" + str('{:02d}').format(frac_secs)
