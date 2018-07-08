@@ -7,8 +7,6 @@ Created 04-11-18 by Matthew C. McCallum
 from sigtools import MakeAudioReader
 
 # Third party imports
-import matplotlib
-matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 plt.ioff()
 
