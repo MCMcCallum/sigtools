@@ -108,10 +108,13 @@ class Mp3Read(AudioRead):
         if not self._temp_file:
             self.ConvertFile()
 
-        if type(self._file) is not str:
-            filename = self._file.name
-        else:
-            filename = self._file
+        if filename is None:
+            if hasattr(self._file, 'name'):
+                filename = self._file.name
+            elif type(self._file) is str:
+                filename = self._file
+            else:
+                raise ValueError('Attempted to save wav file to an invalid filename. Filename must be provided.')
 
         save_filename = os.path.join(directory, os.path.splitext(os.path.basename(filename))[0]+".wav")
 
