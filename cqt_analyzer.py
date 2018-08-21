@@ -63,9 +63,16 @@ class CQTAnalyzer(object):
 
         hop_samples = self._hop*samp_rate
         hop_samples = int(2**5 * round(hop_samples/(2**5)))
+
         # TODO [matthew.mccallum 06.15.18]: Here I add on 1.0 seconds to catch the last window, and chop off any excess later. 
         # This is a little sloppy, but there is only so much thyme. I should really caclulate the additional audio required.
         audio_sig = audio_sig[int(start_idx*hop_samples):int(start_idx*hop_samples + hop_samples*num_windows + samp_rate)] 
+
+        # TODO [matt.c.mccallum 08.21.18]: Here we make sure the number of samples is not close to a prime number to avoid problems
+        # resampling with scipy.
+        if(len(audio_sig)%4):
+            audio_sig = np.concatenate((audio_sig, [0.0]*(4-(len(audio_sig)%4))))
+
         return np.abs(cqt(audio_sig, 
                         samp_rate, 
                         hop_samples, 
