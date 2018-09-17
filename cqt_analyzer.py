@@ -62,7 +62,7 @@ class CQTAnalyzer(object):
             num_windows = self._num_windows
 
         hop_samples = self._hop*samp_rate
-        hop_samples = int(2**5 * round(hop_samples/(2**5)))
+        hop_samples = int(2**(self._octaves - 1) * round(hop_samples/(2**(self._octaves - 1))))
         # TODO [matthew.mccallum 06.15.18]: Here I add on 1.0 seconds to catch the last window, and chop off any excess later. 
         # This is a little sloppy, but there is only so much thyme. I should really caclulate the additional audio required.
         audio_sig = audio_sig[int(start_idx*hop_samples):int(start_idx*hop_samples + hop_samples*num_windows + samp_rate)] 
