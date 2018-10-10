@@ -7,6 +7,7 @@ Created 06-14-18 by Matt C. McCallum
 
 # Third party imports
 from .librosa_cqt_scipy_resample import cqt
+from .librosa_cqt_scipy_resample import hybrid_cqt
 from .librosa_cqt_scipy_resample import pseudo_cqt
 import numpy as np
 
@@ -20,7 +21,11 @@ class CQTAnalyzer(object):
     settings in the object across calls to Analyze(...).
     """
 
-    def __init__(self, samples_per_octave, octaves, min_freq, hop, num_windows=0, samp_rate=44100, pseudo=False):
+    HYRBID_CQT_TYPE = 'hybrid'
+    PSEUDO_CQT_TYPE = 'pseudo'
+    ACTUAL_CQT_TYPE = 'cqt'
+
+    def __init__(self, samples_per_octave, octaves, min_freq, hop, filter_scale=1.0, num_windows=0, samp_rate=44100, cqt_type=ACTUAL_CQT_TYPE):
         """
         Constructor.
 
@@ -32,13 +37,16 @@ class CQTAnalyzer(object):
             min_freq: float - Minimum frequency analyzed in the CQT in Hz.
 
             hop: float - The number of seconds to skip between successive CQT analysis windows.
+
+            filter_scale: float - A scaling factor to adjust the windowing length by, essentially a multiplier on the constant Q window
+            length.
             
             num_windows: int - The number of CQT windows to analyze following the requested analysis point.
 
             samp_rate: int - The sampling rate in Hz to be used for analysis - note this will affect the hop size and
             should be reconfigured for each audio sample if necessary.
 
-            psuedo: bool - Whether to perform the CQT or PsuedoCQT (i.e., with or without adaptive windowing length in time, across frequency.)
+            cqt_type: string - Whether to perform the CQT or PsuedoCQT (i.e., with or without adaptive windowing length in time, across frequency.) or HybridCQT.
         """
         self._hop = hop
         self._min_freq = min_freq
@@ -46,7 +54,8 @@ class CQTAnalyzer(object):
         self._samples_per_octave = samples_per_octave
         self._num_windows = num_windows
         self._samp_rate = samp_rate
-        self._pseudo = pseudo
+        self._type = cqt_type
+        self._filt_scale = filter_scale
 
     def Analyze(self, audio_sig, start_idx, num_windows=None):
         """
@@ -78,14 +87,24 @@ class CQTAnalyzer(object):
         if(len(audio_sig)%4):
             audio_sig = np.concatenate((audio_sig, [0.0]*(4-(len(audio_sig)%4))))
 
-        if self._pseudo:
+        if self._type == self.PSEUDO_CQT_TYPE:
             return np.abs(pseudo_cqt(audio_sig, 
                         self.samp_rate, 
                         self.hop, 
                         self._min_freq, 
                         self._octaves*self._samples_per_octave, 
                         self._samples_per_octave, 
-                        tuning=0.0)[:,:num_windows])
+                        tuning=0.0,
+                        filter_scale=self._filt_scale)[:,:num_windows])
+        elif self._type == self.HYRBID_CQT_TYPE:
+            return np.abs(hybrid_cqt(audio_sig, 
+                        self.samp_rate, 
+                        self.hop, 
+                        self._min_freq, 
+                        self._octaves*self._samples_per_octave, 
+                        self._samples_per_octave, 
+                        tuning=0.0,
+                        filter_scale=self._filt_scale)[:,:num_windows])
         else:
             return np.abs(cqt(audio_sig, 
                         self.samp_rate, 
@@ -93,7 +112,8 @@ class CQTAnalyzer(object):
                         self._min_freq, 
                         self._octaves*self._samples_per_octave, 
                         self._samples_per_octave, 
-                        tuning=0.0)[:,:num_windows])
+                        tuning=0.0,
+                        filter_scale=self._filt_scale)[:,:num_windows])
 
     @property
     def window_rate(self):

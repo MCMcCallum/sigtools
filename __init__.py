@@ -13,3 +13,4 @@ except ModuleNotFoundError:
     print("WARNING: WavPlay is not imported, don't you try to use it.")
 from .mp3_read import *
 from .make_audio_reader import *
+from . import func_lib
