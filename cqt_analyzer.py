@@ -7,6 +7,7 @@ Created 06-14-18 by Matt C. McCallum
 
 # Third party imports
 from .librosa_cqt_scipy_resample import cqt
+from .librosa_cqt_scipy_resample import pseudo_cqt
 import numpy as np
 
 # Python standard library imports
@@ -19,7 +20,7 @@ class CQTAnalyzer(object):
     settings in the object across calls to Analyze(...).
     """
 
-    def __init__(self, samples_per_octave, octaves, min_freq, hop, num_windows, samp_rate):
+    def __init__(self, samples_per_octave, octaves, min_freq, hop, num_windows=0, samp_rate=44100, pseudo=False):
         """
         Constructor.
 
@@ -36,6 +37,8 @@ class CQTAnalyzer(object):
 
             samp_rate: int - The sampling rate in Hz to be used for analysis - note this will affect the hop size and
             should be reconfigured for each audio sample if necessary.
+
+            psuedo: bool - Whether to perform the CQT or PsuedoCQT (i.e., with or without adaptive windowing length in time, across frequency.)
         """
         self._hop = hop
         self._min_freq = min_freq
@@ -43,6 +46,7 @@ class CQTAnalyzer(object):
         self._samples_per_octave = samples_per_octave
         self._num_windows = num_windows
         self._samp_rate = samp_rate
+        self._pseudo = pseudo
 
     def Analyze(self, audio_sig, start_idx, num_windows=None):
         """
@@ -67,15 +71,24 @@ class CQTAnalyzer(object):
 
         # TODO [matthew.mccallum 06.15.18]: Here I add on 1.0 seconds to catch the last window, and chop off any excess later. 
         # This is a little sloppy, but there is only so much thyme. I should really caclulate the additional audio required.
-        audio_sig = audio_sig[int(start_idx*self.hop):int(start_idx*self.hop + self.hop*num_windows + samp_rate)] 
+        audio_sig = audio_sig[int(start_idx*self.hop):int(start_idx*self.hop + self.hop*num_windows + self.samp_rate)] 
 
         # TODO [matt.c.mccallum 08.21.18]: Here we make sure the number of samples is not close to a prime number to avoid problems
         # resampling with scipy.
         if(len(audio_sig)%4):
             audio_sig = np.concatenate((audio_sig, [0.0]*(4-(len(audio_sig)%4))))
 
-        return np.abs(cqt(audio_sig, 
-                        samp_rate, 
+        if self._pseudo:
+            return np.abs(pseudo_cqt(audio_sig, 
+                        self.samp_rate, 
+                        self.hop, 
+                        self._min_freq, 
+                        self._octaves*self._samples_per_octave, 
+                        self._samples_per_octave, 
+                        tuning=0.0)[:,:num_windows])
+        else:
+            return np.abs(cqt(audio_sig, 
+                        self.samp_rate, 
                         self.hop, 
                         self._min_freq, 
                         self._octaves*self._samples_per_octave, 
