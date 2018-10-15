@@ -122,7 +122,7 @@ class CQTAnalyzer(object):
 
         Returns the effective windowing rate of the CQT anaylsis in Hz.
         """
-        return 1.0/self.hop
+        return 1.0/(self.hop/self.samp_rate)
 
     @property
     def hop(self):
