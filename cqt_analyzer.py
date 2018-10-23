@@ -116,6 +116,15 @@ class CQTAnalyzer(object):
                         filter_scale=self._filt_scale)[:,:num_windows])
 
     @property
+    def analysis_frequencies(self):
+        """
+        Type: np.ndarray
+
+        Returns the frequencies in Hz of each frequency index in the analyzed data.
+        """
+        return self._min_freq * 2.0**(np.arange(0, self._samples_per_octave*self._octaves, dtype=float) / self._samples_per_octave)
+
+    @property
     def window_rate(self):
         """
         Type: float
