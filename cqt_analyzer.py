@@ -87,7 +87,7 @@ class CQTAnalyzer(object):
         # resampling with scipy.
         if(len(audio_sig)%4):
             audio_sig = np.concatenate((audio_sig, [0.0]*(4-(len(audio_sig)%4))))
-        print(self._norm)
+
         if self._type == self.PSEUDO_CQT_TYPE:
             return np.abs(pseudo_cqt(audio_sig, 
                         self.samp_rate, 
