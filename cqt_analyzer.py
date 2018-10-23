@@ -25,7 +25,7 @@ class CQTAnalyzer(object):
     PSEUDO_CQT_TYPE = 'pseudo'
     ACTUAL_CQT_TYPE = 'cqt'
 
-    def __init__(self, samples_per_octave, octaves, min_freq, hop, filter_scale=1.0, num_windows=0, samp_rate=44100, cqt_type=ACTUAL_CQT_TYPE):
+    def __init__(self, samples_per_octave, octaves, min_freq, hop, filter_scale=1.0, num_windows=0, samp_rate=44100, cqt_type=ACTUAL_CQT_TYPE, norm=1):
         """
         Constructor.
 
@@ -56,6 +56,7 @@ class CQTAnalyzer(object):
         self._samp_rate = samp_rate
         self._type = cqt_type
         self._filt_scale = filter_scale
+        self._norm = norm
 
     def Analyze(self, audio_sig, start_idx, num_windows=None):
         """
@@ -86,14 +87,15 @@ class CQTAnalyzer(object):
         # resampling with scipy.
         if(len(audio_sig)%4):
             audio_sig = np.concatenate((audio_sig, [0.0]*(4-(len(audio_sig)%4))))
-
+        print(self._norm)
         if self._type == self.PSEUDO_CQT_TYPE:
             return np.abs(pseudo_cqt(audio_sig, 
                         self.samp_rate, 
                         self.hop, 
                         self._min_freq, 
                         self._octaves*self._samples_per_octave, 
-                        self._samples_per_octave, 
+                        self._samples_per_octave,
+                        norm=self._norm,
                         tuning=0.0,
                         filter_scale=self._filt_scale)[:,:num_windows])
         elif self._type == self.HYRBID_CQT_TYPE:
@@ -102,7 +104,8 @@ class CQTAnalyzer(object):
                         self.hop, 
                         self._min_freq, 
                         self._octaves*self._samples_per_octave, 
-                        self._samples_per_octave, 
+                        self._samples_per_octave,
+                        norm=self._norm,
                         tuning=0.0,
                         filter_scale=self._filt_scale)[:,:num_windows])
         else:
@@ -111,7 +114,8 @@ class CQTAnalyzer(object):
                         self.hop, 
                         self._min_freq, 
                         self._octaves*self._samples_per_octave, 
-                        self._samples_per_octave, 
+                        self._samples_per_octave,
+                        norm=self._norm,
                         tuning=0.0,
                         filter_scale=self._filt_scale)[:,:num_windows])
 
@@ -122,7 +126,8 @@ class CQTAnalyzer(object):
 
         Returns the effective windowing rate of the CQT anaylsis in Hz.
         """
-        return 1.0/self.hop
+
+        return 1.0 / (self.hop / self.samp_rate)
 
     @property
     def hop(self):
